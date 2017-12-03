@@ -1,0 +1,63 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(readr)
+library(ggplot2)
+library(gganimate)
+library(scales)
+library(dplyr)
+library(gganimate)
+```
+
+```{r}
+homeruns <- read_csv("~/Desktop/homeruns1880-16_freq.csv")
+
+barfill <- "gold1"
+barlines <- "goldenrod2"
+
+homeruns1959 <- homeruns %>%
+  filter(yearid == 2016)
+ggplot(data=homeruns1959, aes(hr)) + geom_histogram(aes(fill = ..count..),binwidth = 1, bins=35) +
+   ylab("Count") +
+  xlab("Homeruns; players with AB >= 200") +
+  theme_minimal(base_size = 12, base_family = "Georgia") 
+
+  
+
+homeruns$year = as.character(homeruns$yearid)
+Distribution_HR <- ggplot(homeruns, aes(hr, frame = year)) +
+  geom_histogram(aes(fill = ..count..),binwidth = 1, bins=35) +
+  ylab("Count") +
+  xlab("Homeruns: Players with AB >= 200") +
+  ylim(0,20)+
+  theme_minimal(base_size = 12, base_family = "Georgia")
+gganimate(Distribution_HR)
+gganimate(Distribution_HR, "homeruns.gif", ani.width = 1600, ani.height = 900, interval = 0.5)
+```
+
+```{r}
+#Requires ImageMagick
+years <- c(1880:2016)
+for (y in years) {
+  tmp <- homeruns %>%
+    filter(yearid <= y)
+  chart <- ggplot(data=tmp, aes(tmp$hr)) %>%
+    + geom_histogram(aes(fill = ..count..),binwidth = 1, bins=35) %>%
+    + ylab("Count") %>%
+    + xlab("Homeruns: Players with AB >= 200") %>%
+    + ggtitle(y) %>%
+    + theme(text=element_text(size=16,family="Georgia"))
+  ggsave(file=paste0(y,".jpg"), plot = chart, width = 8, height = 4.5, units = "in", dpi=300)
+  print(paste0("processing: ",y))
+}
+
+for (y in years) {
+  system(paste0("convert charts/",y,".jpg maps/map",y,".jpg -geometry +305+72 -composite -pointsize 100 -font Georgia -annotate +2000+1120 ",y," combined/img",y,".jpg"))
+  print(paste0("processing: ",y))
+}
+
+
+```
+
